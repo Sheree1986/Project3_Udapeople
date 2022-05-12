@@ -1,17 +1,17 @@
 version: 2.1
 
-commands:
-    destroy-environment:
-        description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-        parameters:
-            mystack:
-                type: string
-        steps:
-            - run:
-                name: Destroy environments
-                when: on_fail
-                command: |
-                    aws cloudformation delete-stack --stack-name <<parameters.mystack>>
+# commands:
+#     destroy-environment:
+#         description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+#         parameters:
+#             mystack:
+#                 type: string
+#         steps:
+#             - run:
+#                 name: Destroy environments
+#                 when: on_fail
+#                 command: |
+#                     aws cloudformation delete-stack --stack-name <<parameters.mystack>>
 
 #     revert-migrations:
 #         description: Revert the last migration if successfully run in the current workflow.
@@ -108,7 +108,6 @@ jobs:
                     cd frontend
                     npm install
                     npm audit fix --audit-level=critical --force
-                    npm audit fix --force
                     npm audit --audit-level=critical
 
     scan-backend:
@@ -121,10 +120,8 @@ jobs:
             - run:
                 name: Scan back-end
                 command: |
-                    cd frontend
+                    cd backend
                     npm install
-                    npm audit fix
-                    npm audit fix --force
                     npm audit fix --audit-level=critical --force
                     npm audit --audit-level=critical
 
