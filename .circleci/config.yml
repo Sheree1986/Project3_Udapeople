@@ -326,20 +326,15 @@ jobs:
                 cat frontend/.env
                 pwd
         - run:
-            name: Backend smoke test.
+            name: Backend smoke test
             command: |
-                export API_URL="http://${BACKEND_IP}:3030"
-                echo "The API URL is:"
+                API_URL=$(curl --insecure https://kvdb.io/Kyvgb9GqXkDWBZKkZw7ZdM/apiurl)
                 echo "${API_URL}"
-                echo ""
-                echo "The API status URL is:"
-                echo "${API_URL}/api/status"
-                echo ""
                 if curl "${API_URL}/api/status" | grep "ok"
                 then
-                    exit 0
+                return 0
                 else
-                    exit 1
+                return 1
                 fi
        
                 # export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text )
