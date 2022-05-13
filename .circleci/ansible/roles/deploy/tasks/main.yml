@@ -1,0 +1,42 @@
+---
+- name: "upgrade packages"
+  become: true
+  apt:
+    upgrade: "yes"
+
+- name: "install dependencies"
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: "install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: "Copy backend artifact"
+  copy:
+    src: artifact.tar.gz
+    dest: ~/artifact.tar.gz
+
+- name: Creates directory
+  file:
+    path: /home/ubuntu/backend
+    state: directory
+
+- name: Extract artifact.tar.gz file
+  shell:
+    cmd: tar -xvzf artifact.tar.gz -C backend
+    chdir: /home/ubuntu
+
+- name: "use pm2 to run backend"
+  shell: |
+    cd backend/
+    npm install
+    pm2 stop backend
+    pm2 start npm -i max --name "backend" -- run start:prod
