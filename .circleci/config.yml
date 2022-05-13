@@ -299,87 +299,6 @@ jobs:
         - revert-migrations:
                workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
  
-    # deploy-frontend:
-    #     docker:
-    #     - image: circleci/node:13.8.0
-    #     steps:
-    #     - checkout
-    #     - run:
-    #         name: Install dependencies
-    #         command: |
-    #             sudo apt-get install zip unzip python ansible python-pip && pip install awscli         
-    #     - run:
-    #         name: Get backend url
-    #         command: |
-    #             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text )
-    #             export API_URL="http://${BACKEND_IP}:3030"
-    #             echo "API_URL = ${API_URL}"
-    #             echo ENVIRONMENT=production > frontend/.env
-    #             echo NODE_ENV=production >> frontend/.env
-    #             echo NODE_ENV=production > "backend/.env"
-    #             echo ENVIRONMENT=production >> "backend/.env"
-    #             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-    #             cat frontend/.env
-    #     - run:
-    #         name: Deploy frontend objects
-    #         command: |
-    #             cd frontend
-    #             cat .env
-    #             ls -larth
-    #             npm install
-    #             npm run build
-    #             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-    #             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-    #             aws s3 cp .env s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} 
-                
-    #     - destroy-environment:
-    #         workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-
-    #     - revert-migrations:
-    #         workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-
-
-    # deploy-backend:
-    #       docker:
-    #         - image: circleci/node:13.8.0
-    #       steps:
-    #        - checkout
-    #        - add_ssh_keys:
-    #             fingerprints: ["f3:09:48:b8:69:c4:88:a9:fb:da:f4:d5:33:3a:fb:04"]
-    #        - attach_workspace:
-    #               at: ~/
-    #        - run:
-    #           name: Getting Ansible
-    #           command: |
-    #                         sudo apt update
-    #                         sudo apt install ansible
-    #        - run:
-    #           name: Getting the AWS CLI
-    #           command: |
-    #                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
-    #                         -o "awscliv2.zip"
-    #                         unzip awscliv2.zip
-    #                         sudo ./aws/install
-    #                         export AWS_PAGER=""
-    #        - run:
-    #             name: Deploy backend
-    #             command: |
-    #                         cd backend
-    #                         npm i
-    #                         npm run build
-    #                         cd ..
-    #                         # Zip the directory
-    #                         tar -C backend -czvf artifact.tar.gz .
-    #                         cd .circleci/ansible
-    #                         echo "Contents  of the inventory.txt file is -------"
-    #                         cat inventory.txt
-    #                         ansible-playbook -i inventory.txt deploy-backend.yml -v              
-                    
-    #        - destroy-environment:
-    #             workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-    #        - revert-migrations:
-    #            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-    # uu
         
 
     smoke-test:
@@ -424,15 +343,7 @@ jobs:
                  exit  0
                 fi
        
-                # export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text )
-                # export API_URL="http://${BACKEND_IP}:3030"
-                # echo "${API_URL}"
-                # if curl "${API_URL}/api/status" | grep "ok"
-                # then
-                #     exit 0
-                # else
-                #     exit 1
-                # fij
+    
         - run:
             name: Frontend smoke test.
             command: |
@@ -450,40 +361,40 @@ jobs:
         - revert-migrations:
             workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
-    # cloudfront-update:
-    #     docker:
-    #     - image: amazon/aws-cli
-    #     steps:
-    #     - checkout
-    #     - run:
-    #         name: Install dependencies
-    #         command: |
-    #             yum install -y tar gzip
-    #     - run:
-    #         name: Update cloudfront distribution
-    #         command: |
-    #             export OldWorkflowID=$(aws cloudformation \
-    #             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-    #             --no-paginate --output text)
-    #             echo $OldWorkflowID > ~/OldWorkflowID.txt
-    #             cat ~/OldWorkflowID.txt
+    cloudfront-update:
+        docker:
+        - image: amazon/aws-cli
+        steps:
+        - checkout
+        - run:
+            name: Install dependencies
+            command: |
+                yum install -y tar gzip
+        - run:
+            name: Update cloudfront distribution
+            command: |
+                export OldWorkflowID=$(aws cloudformation \
+                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                --no-paginate --output text)
+                echo $OldWorkflowID > ~/OldWorkflowID.txt
+                cat ~/OldWorkflowID.txt
                 
-    #             # Change the initial stack name, as applicable to you            
-    #             aws cloudformation deploy \
-    #             --template-file .circleci/files/cloudfront.yml \
-    #             --stack-name InitialStack \
-    #             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-    #             --tags project=udapeople
+                # Change the initial stack name, as applicable to you            
+                aws cloudformation deploy \
+                --template-file .circleci/files/cloudfront.yml \
+                --stack-name InitialStack \
+                --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+                --tags project=udapeople
                 
-    #     - persist_to_workspace:
-    #         root: ~/
-    #         paths:
-    #             - OldWorkflowID.txt
-    #     # Here's where you will add some code to rollback on failureeeeees 
-    #     - destroy-environment:
-    #         workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-    #     - revert-migrations:
-    #         workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}                           
+        - persist_to_workspace:
+            root: ~/
+            paths:
+                - OldWorkflowID.txt
+        # Here's where you will add some code to rollback on failureeeeees 
+        - destroy-environment:
+            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+        - revert-migrations:
+            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}                           
                 
         
             
@@ -544,7 +455,7 @@ workflows:
                   requires: [run-migrations]
             - smoke-test:
                   requires: [deploy-backend, deploy-frontend]
-            # - cloudfront-update:
-            #       requires: [smoke-test]
+            - cloudfront-update:
+                  requires: [smoke-test]
             # - cleanup:
             #       requires: [cloudfront-update]
