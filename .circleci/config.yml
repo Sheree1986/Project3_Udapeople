@@ -227,13 +227,16 @@ jobs:
 
     deploy-frontend:
         docker:
-        - image: circleci/node:13.8.0
+        - image: amazon/aws-cli
         steps:
         - checkout
         - run:
             name: Install dependencies
             command: |
-                sudo apt-get install zip unzip python ansible python-pip && pip install awscli         
+            yum -y install tar
+            yum -y install gzip
+            curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
+            yum -y install nodejs
         - run:
             name: Get backend url
             command: |
@@ -248,13 +251,10 @@ jobs:
             name: Deploy frontend objects
             command: |
               cd frontend
-              cat .env
-              ls -larth
               npm install
               npm run build
               tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-              aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-              aws s3 cp .env s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} 
+              aws s3 cp dist s3://udapeople-"${CIRCLE_WORKFLOW_ID:0:7}" --recursive
                 
         - destroy-environment:
             workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -263,39 +263,36 @@ jobs:
 
     deploy-backend:
         docker:
-        - image: circleci/node:13.8.0
+        - image: "python:3.7-alpine3.11"
         steps:
         - checkout
         - add_ssh_keys:
             fingerprints: ["f3:09:48:b8:69:c4:88:a9:fb:da:f4:d5:33:3a:fb:04"]
         - attach_workspace:
-              at: ~/
+           at: ~/
         - run:
-           name: Getting Ansible
+           name: Install dependencies
            command: |
-                sudo apt update
-                sudo apt install ansible
-        - run:
-            name: Getting the AWS CLI
-            command: |
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
-                -o "awscliv2.zip"
-                unzip awscliv2.zip
-                sudo ./aws/install
-                export AWS_PAGER=""
+                apk add --update ansible
+                apk add --update nodejs npm
+                apk add --update tar
+                apk add --update gzip
+                apk add --update curl
+                apk add --update openssh-client
         - run:
             name: Deploy backend
             command: |
-                            cd backend
-                            npm i
-                            npm run build
-                            cd ..
-                            # Zip the directory
-                            tar -C backend -czvf artifact.tar.gz .
-                            cd .circleci/ansible
-                            echo "Contents  of the inventory.txt file is -------"
-                            cat inventory.txt
-                            ansible-playbook -i inventory.txt deploy-backend.yml -v              
+                cd backend
+                npm i
+                npm run build
+                cp package* ./dist
+                cd ..
+                tar -C backend -czvf artifact.tar.gz .
+                cd .circleci/ansible
+                echo "Contents  of the inventory.txt file is -------"
+                cat inventory.txt
+                ansible-playbook -i inventory.txt deploy-backend.yml
+             
                     
         - destroy-environment:
                 workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
