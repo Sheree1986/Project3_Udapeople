@@ -316,15 +316,15 @@ jobs:
             name: Install dependencies
             command: |
                 sudo apt-get install curl python python-pip && pip install awscli
-        # - run:
-        #     name: Get backend url
-        #     command: |
-        #         export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text )
-        #         export API_URL="http://${BACKEND_IP}:3030"
-        #         echo "API_URL = ${API_URL}"
-        #         echo API_URL="http://${BACKEND_IP}:3030" > frontend/.env
-        #         cat frontend/.env
-        #         pwd
+        - run:
+            name: Get backend url
+            command: |
+                export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text )
+                export API_URL="http://${BACKEND_IP}:3030"
+                echo "API_URL = ${API_URL}"
+                echo API_URL="http://${BACKEND_IP}:3030" > frontend/.env
+                cat frontend/.env
+                pwd
         # - run:
         #     name: Backend smoke test.
         #     command: |
